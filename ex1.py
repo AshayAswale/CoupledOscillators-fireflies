@@ -35,22 +35,22 @@ def getFireflies():
 
 def updateBoard(size):
     global counters
-
+    new_counter = np.zeros((size,size))
     for row in range(size):
         for col in range(size):
             val = counters[row,col]
-            counters[row,col] = val+1
+            new_counter[row,col] = val+1
 
             if(neighborFlashed(row,col)):
-                counters[row,col] = val + k*val
+                new_counter[row,col] = val + k*val
             
             if val >= T:
-                counters[row,col] = 0.0
-                
+                new_counter[row,col] = 0.0
+    counters = new_counter
     return getFireflies()
 
 
-im = plt.imshow(updateBoard(size), animated=True,cmap='gray')
+im = plt.imshow(updateBoard(size), animated=True)
 
 def updatefig(*args):
     im.set_array(updateBoard(size))
