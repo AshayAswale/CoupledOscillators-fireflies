@@ -5,7 +5,7 @@ import random
 
 fig = plt.figure()
 first = True
-T = 10
+T = 100
 size = 10
 counters = np.random.rand(size,size)
 counters *= T
@@ -56,5 +56,5 @@ def updatefig(*args):
     im.set_array(updateBoard(size))
     return im,
 
-ani = animation.FuncAnimation(fig, updatefig, interval=90, blit=True)
+ani = animation.FuncAnimation(fig, updatefig, interval=10, blit=True)
 plt.show()
