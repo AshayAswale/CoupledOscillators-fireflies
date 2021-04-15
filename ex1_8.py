@@ -7,7 +7,7 @@ import copy
 fig = plt.figure()
 first = True
 
-R = 10
+R = 3
 size = 20
 P = 0.001
 petri_dish= np.zeros([size,size])
@@ -17,11 +17,12 @@ signal = np.zeros([size,size])
 history = np.zeros([size,size])
 
 signal[10,10] = 1
+resets[10,10] = R
 history[10,10] = 1
 
 
 i = 0
-thr = 2
+thr = 3
 k=0.5
 
 def isProbable():
@@ -52,13 +53,8 @@ def getPetriDish():
             if (resets[row,col]<=0):
                 petri_dish[row,col] = 0.0
             else:
-                if(petri_dish[row,col] == 0.0):
-                    size_preds[row,col] += 1
                 petri_dish[row,col] = 1.0
-
-    # print(size_preds)
-    # print()
-    return signal
+    return petri_dish
 
 def changeSignal():
     east = petri_dish[max(x-1,0),y]  == 1
@@ -71,7 +67,7 @@ def updateBoard(size):
     global petri_dish, signal
     global i, thr
     
-    if i<1:
+    if i<thr:
         temp_ = np.zeros([size,size])
         i += 1
         temp_[0,0] = 1
@@ -82,17 +78,13 @@ def updateBoard(size):
         for col in range(size):
             if signal[row,col] == 0:
                 if neighborFlashed(row,col, signal) and not(history[row,col]==1):
-                    # print(row,col)
-                    temp_signal[row,col] = 1 
-                    history[row,col]=1
-                # else:
-                    # signal[row,col] = 0
+                    temp_signal[row,col] = 1
+                    resets[row,col] = R + 1
+                    history[row,col] = 1
             else:
-                temp_signal[row,col] = 0
+                temp_signal[row,col] -= 1
+            resets[row,col] -= 1
     signal = temp_signal
-    # exit()
-
-
     return getPetriDish()
 
 
@@ -102,5 +94,5 @@ def updatefig(*args):
     im.set_array(updateBoard(size))
     return im,
 
-ani = animation.FuncAnimation(fig, updatefig, interval=500, blit=True)
+ani = animation.FuncAnimation(fig, updatefig, interval=100, blit=True)
 plt.show()
