@@ -7,29 +7,41 @@ import copy
 fig = plt.figure()
 first = True
 
-R = 20
+R = 10
 size = 20
-probabs = np.full((size,size), 0.001)
+P = 0.001
 petri_dish= np.zeros([size,size])
 resets = np.zeros([size,size])
 size_preds = np.zeros([size,size])
+signal = np.zeros([size,size])
+history = np.zeros([size,size])
+
+signal[10,10] = 1
+history[10,10] = 1
+
 
 i = 0
 thr = 2
 k=0.5
 
-def isProbable(probability):
-    if random.random()<=probability:
-        return True
-    else:
-        return False
+def isProbable():
+    return random.random()<=P
 
-def neighborFlashed(x,y):
-    east = petri_dish[max(x-1,0),y]  == 1
-    west = petri_dish[min(x+1,size-1),y]  == 1
-    south = petri_dish[x,max(y-1,0)]  == 1
-    north = petri_dish[x,min(y+1,size-1)]  == 1
-    return east or west or south or north
+
+def neighborFlashed(x,y, signal):
+    east = signal[max(x-1,0),y]  == 1
+    west = signal[min(x+1,size-1),y]  == 1
+    south = signal[x,max(y-1,0)]  == 1
+    north = signal[x,min(y+1,size-1)]  == 1
+
+    north_east = signal[min(x+1,size-1),max(y-1,0)]  == 1
+    north_west = signal[min(x+1,size-1),min(y+1,size-1)]  == 1
+    south_east = signal[max(x-1,0),max(y-1,0)]  == 1
+    south_west = signal[max(x-1,0),min(y+1,size-1)]  == 1
+
+    four_way = east or west or south or north
+    eight_way = four_way or north_east or north_west or south_east or south_west
+    return  eight_way
 
 def getPetriDish():
     global petri_dish
@@ -46,28 +58,40 @@ def getPetriDish():
 
     # print(size_preds)
     # print()
-    return petri_dish
+    return signal
+
+def changeSignal():
+    east = petri_dish[max(x-1,0),y]  == 1
+    west = petri_dish[min(x+1,size-1),y]  == 1
+    south = petri_dish[x,max(y-1,0)]  == 1
+    north = petri_dish[x,min(y+1,size-1)]  == 1
 
 def updateBoard(size):
     global resets
-    global petri_dish
+    global petri_dish, signal
     global i, thr
     
-    if i<thr:
+    if i<1:
         temp_ = np.zeros([size,size])
         i += 1
         temp_[0,0] = 1
-        return temp_
+        return signal
     
+    temp_signal = copy.deepcopy(signal)
     for row in range(size):
         for col in range(size):
-            if (petri_dish[row,col] == 0):
-                if(neighborFlashed(row,col)):
-                    resets[row,col] = R
-                if (isProbable(probabs[row,col])):
-                    resets[row,col] = R
+            if signal[row,col] == 0:
+                if neighborFlashed(row,col, signal) and not(history[row,col]==1):
+                    # print(row,col)
+                    temp_signal[row,col] = 1 
+                    history[row,col]=1
+                # else:
+                    # signal[row,col] = 0
             else:
-                resets[row,col] -= 1
+                temp_signal[row,col] = 0
+    signal = temp_signal
+    # exit()
+
 
     return getPetriDish()
 
@@ -78,5 +102,5 @@ def updatefig(*args):
     im.set_array(updateBoard(size))
     return im,
 
-ani = animation.FuncAnimation(fig, updatefig, interval=50, blit=True)
+ani = animation.FuncAnimation(fig, updatefig, interval=500, blit=True)
 plt.show()
