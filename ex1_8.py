@@ -3,13 +3,36 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import random 
 import copy
+import sys
 
 fig = plt.figure()
 first = True
 
-R = 3
-size = 5
-P = 0.001
+input_args = len(sys.argv)
+if int(input_args) != 2:
+    print("Input board size not found. Size of 5 considered")
+    size = 5
+else:
+    size = int(sys.argv[1])
+
+
+if size == 5:
+    R = 5
+    P = 0.005
+elif size == 10:
+    R = 3
+    P = 0.001
+elif size == 20:
+    R = 2
+    P = 0.0001
+else:
+    print("Only tuned sizes are 5, 10, and 20. This size is not tuned. Still trying.")
+    R = 3
+    P = 0.001
+
+
+silent_count_max = 1/P
+# silent_count_max = 200
 # petri_dish= np.zeros([size,size])
 resets = np.zeros([size,size])
 size_preds = np.zeros([size,size])
@@ -70,7 +93,6 @@ def neighborFlashed(x,y, signal):
 
 def getPetriDish():
     petri_dish= np.zeros([size,size])
-    global size_preds
 
     for row in range(size):
         for col in range(size):
@@ -80,16 +102,11 @@ def getPetriDish():
                 petri_dish[row,col] = 1.0
     return petri_dish
 
-def changeSignal():
-    east = petri_dish[max(x-1,0),y]  == 1
-    west = petri_dish[min(x+1,size-1),y]  == 1
-    south = petri_dish[x,max(y-1,0)]  == 1
-    north = petri_dish[x,min(y+1,size-1)]  == 1
-
 def updateBoard(size):
     global resets
     global petri_dish, signal
     global i, thr
+    global size_preds
     
     if i<thr:
         temp_ = np.zeros([size,size])
@@ -98,24 +115,32 @@ def updateBoard(size):
         return temp_
     
     temp_signal = copy.deepcopy(signal)
+    silent_count = 0
     for row in range(size):
         for col in range(size):
-            if isProbable():
+            if resets[row,col] <-1 and isProbable() and fire_once[row,col] == 0:
                 temp_signal[row,col] = 1 
                 resets[row,col] = R + 1
-                # history[row,col] = 1
+                fire_once[row,col] = 1
+                size_preds[row,col] += 1
+                
             if signal[row,col] == 0:
                 if neighborFlashed(row,col, signal) and not(resets[row,col]>0):
                     temp_signal[row,col] = 1
                     resets[row,col] = R + 1
-            # else:
-
-                    # history[row,col] = 1
+                    size_preds[row,col] += 1
+                    
             else:
                 temp_signal[row,col] -= 1
             resets[row,col] -= 1
+            if resets[row,col] < -silent_count_max:
+                silent_count += 1
     # print(resets)
     signal = temp_signal
+    if silent_count >= size*size:
+        print("\nSize estimate of all the agents:")
+        print(size_preds)
+        exit()
     return getPetriDish()
 
 
@@ -125,5 +150,5 @@ def updatefig(*args):
     im.set_array(updateBoard(size))
     return im,
 
-ani = animation.FuncAnimation(fig, updatefig, interval=100, blit=True)
+ani = animation.FuncAnimation(fig, updatefig, interval=2, blit=True)
 plt.show()
