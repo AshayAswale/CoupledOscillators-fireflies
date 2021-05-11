@@ -8,17 +8,15 @@ fig = plt.figure()
 first = True
 
 R = 3
-size = 20
+size = 10
 P = 0.001
-petri_dish= np.zeros([size,size])
+# petri_dish= np.zeros([size,size])
 resets = np.zeros([size,size])
 size_preds = np.zeros([size,size])
 signal = np.zeros([size,size])
-history = np.zeros([size,size])
+# history = np.zeros([size,size])
+fire_once = np.zeros([size,size])
 
-signal[10,10] = 1
-resets[10,10] = R
-history[10,10] = 1
 
 
 i = 0
@@ -45,7 +43,7 @@ def neighborFlashed(x,y, signal):
     return  eight_way
 
 def getPetriDish():
-    global petri_dish
+    petri_dish= np.zeros([size,size])
     global size_preds
 
     for row in range(size):
@@ -71,19 +69,24 @@ def updateBoard(size):
         temp_ = np.zeros([size,size])
         i += 1
         temp_[0,0] = 1
-        return signal
+        return temp_
     
     temp_signal = copy.deepcopy(signal)
     for row in range(size):
         for col in range(size):
+            if isProbable():
+                temp_signal[row,col] = 1 
+                resets[row,col] = R + 1
+                # history[row,col] = 1
             if signal[row,col] == 0:
-                if neighborFlashed(row,col, signal) and not(history[row,col]==1):
+                if neighborFlashed(row,col, signal) and not(resets[row,col]>0):
                     temp_signal[row,col] = 1
                     resets[row,col] = R + 1
-                    history[row,col] = 1
+                    # history[row,col] = 1
             else:
                 temp_signal[row,col] -= 1
             resets[row,col] -= 1
+    # print(resets)
     signal = temp_signal
     return getPetriDish()
 
@@ -94,5 +97,5 @@ def updatefig(*args):
     im.set_array(updateBoard(size))
     return im,
 
-ani = animation.FuncAnimation(fig, updatefig, interval=100, blit=True)
+ani = animation.FuncAnimation(fig, updatefig, interval=1000, blit=True)
 plt.show()
