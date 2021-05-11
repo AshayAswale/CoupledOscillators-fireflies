@@ -8,7 +8,7 @@ fig = plt.figure()
 first = True
 
 R = 3
-size = 10
+size = 5
 P = 0.001
 # petri_dish= np.zeros([size,size])
 resets = np.zeros([size,size])
@@ -28,15 +28,41 @@ def isProbable():
 
 
 def neighborFlashed(x,y, signal):
-    east = signal[max(x-1,0),y]  == 1
-    west = signal[min(x+1,size-1),y]  == 1
-    south = signal[x,max(y-1,0)]  == 1
-    north = signal[x,min(y+1,size-1)]  == 1
+    i = 0
+    east = False
+    west = False
+    south = False
+    north = False
+    north_east = False
+    north_west = False
+    south_east = False
+    south_west = False
+    
+    if(signal[max(x-1,0),y]  == 1):
+        east = True
+        i += 1
+    if(signal[min(x+1,size-1),y]  == 1):
+        west = True
+        i += 1
+    if(signal[x,max(y-1,0)]  == 1):
+        south = True
+        i += 1
+    if(signal[x,min(y+1,size-1)]  == 1):
+        north = True
+        i += 1
 
-    north_east = signal[min(x+1,size-1),max(y-1,0)]  == 1
-    north_west = signal[min(x+1,size-1),min(y+1,size-1)]  == 1
-    south_east = signal[max(x-1,0),max(y-1,0)]  == 1
-    south_west = signal[max(x-1,0),min(y+1,size-1)]  == 1
+    if(signal[min(x+1,size-1),max(y-1,0)]  == 1):
+        north_east = True
+        i += 1
+    if(signal[min(x+1,size-1),min(y+1,size-1)]  == 1):
+        north_west = True
+        i += 1
+    if(signal[max(x-1,0),max(y-1,0)]  == 1):
+        south_east = True
+        i += 1
+    if(signal[max(x-1,0),min(y+1,size-1)]  == 1):
+        south_west = True
+        i += 1
 
     four_way = east or west or south or north
     eight_way = four_way or north_east or north_west or south_east or south_west
@@ -82,6 +108,8 @@ def updateBoard(size):
                 if neighborFlashed(row,col, signal) and not(resets[row,col]>0):
                     temp_signal[row,col] = 1
                     resets[row,col] = R + 1
+            # else:
+
                     # history[row,col] = 1
             else:
                 temp_signal[row,col] -= 1
@@ -97,5 +125,5 @@ def updatefig(*args):
     im.set_array(updateBoard(size))
     return im,
 
-ani = animation.FuncAnimation(fig, updatefig, interval=1000, blit=True)
+ani = animation.FuncAnimation(fig, updatefig, interval=100, blit=True)
 plt.show()
